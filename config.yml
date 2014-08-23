@@ -1,0 +1,20 @@
+# Number of lives player starts out with
+Lives: 3
+# Erases Essentials userdata
+Delete-Essentials-Homes: true
+# Rollback all world block data. REQUIRES LOGBLOCK
+Rollback: true
+# Empties players bank account
+Remove-Money: true
+# Temp Ban player for x amount of time. ex. 1y, 1mo, 1w, 1d, 1m, 1h, 1s or any combination. SERVER WIDE
+Temp-Ban:
+  Enable: false
+  Time: 1h
+# Permanently ban player forever! SERVER WIDE
+Perm-Ban:
+  Enable: false
+# Enabled Worlds
+Worlds:
+- world
+- world_nether
+- world_the_end
