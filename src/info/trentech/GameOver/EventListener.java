@@ -12,6 +12,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 
 public class EventListener implements Listener{
 	
@@ -22,32 +23,75 @@ public class EventListener implements Listener{
 	
 	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onPlayerJoinEvent(PlayerJoinEvent event){
+		if(plugin.getConfig().getString("Ban-Type").equalsIgnoreCase("global")){
+			Player player = event.getPlayer();
+			String uuid = player.getUniqueId().toString();
+			plugin.players.put(event.getPlayer().getUniqueId(), event.getPlayer().getName());	
+			File file = new File(this.plugin.getDataFolder() + "/players/", uuid + ".yml");
+			YamlConfiguration playerConfig = YamlConfiguration.loadConfiguration(file);
+			if(playerConfig.getString("Lives") == null){
+				playerConfig.set("Lives", plugin.getConfig().getInt("Lives"));
+			}
+			if(playerConfig.getString("Banned") == null){
+				playerConfig.set("Banned", false);
+			}
+			if(playerConfig.getString("Time") == null){
+				playerConfig.set("Time", 0);
+			}
+			try {
+				playerConfig.save(file);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			if(playerConfig.getBoolean("Banned")){
+				if(playerConfig.getLong("Time") == -1){
+					String message = plugin.getConfig().getString("Perm-Ban.Kick-Message");
+					event.setJoinMessage("");
+					player.kickPlayer(message);
+				}else{
+					DataSource.instance.tempBanCheck(player, null, "global");
+				}
+			}
+		}
+	}
+		
+	@EventHandler(priority = EventPriority.MONITOR)
+	public void onPlayerTeleportEvent(PlayerTeleportEvent event){
+		System.out.println("TEST");
 		Player player = event.getPlayer();
-		String uuid = player.getUniqueId().toString();
-		plugin.players.put(event.getPlayer().getUniqueId(), event.getPlayer().getName());	
-		File file = new File(this.plugin.getDataFolder() + "/players/", uuid + ".yml");
-		YamlConfiguration playerConfig = YamlConfiguration.loadConfiguration(file);
-		if(playerConfig.getString("Lives") == null){
-			playerConfig.set("Lives", plugin.getConfig().getInt("Lives"));
-		}
-		if(playerConfig.getString("Banned") == null){
-			playerConfig.set("Banned", false);
-		}
-		if(playerConfig.getString("Time") == null){
-			playerConfig.set("Time", 0);
-		}
-		try {
-			playerConfig.save(file);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		if(playerConfig.getBoolean("Banned")){
-			if(playerConfig.getLong("Time") == -1){
-				String message = plugin.getConfig().getString("Perm-Ban.Kick-Message");
-				event.setJoinMessage("");
-				player.kickPlayer(message);
-			}else{
-				DataSource.instance.tempBanCheck(player);
+		if(plugin.getConfig().getString("Ban-Type").equalsIgnoreCase("world")){
+			System.out.println(event.getTo().getWorld().getName());		
+			List<String> worlds = plugin.getConfig().getStringList("Worlds");
+			System.out.println(worlds);
+			if(worlds.contains(event.getTo().getWorld().getName())){
+				System.out.println("TEST3");
+				String uuid = player.getUniqueId().toString();
+				plugin.players.put(event.getPlayer().getUniqueId(), event.getPlayer().getName());	
+				File file = new File(this.plugin.getDataFolder() + "/players/", uuid + ".yml");
+				YamlConfiguration playerConfig = YamlConfiguration.loadConfiguration(file);
+				if(playerConfig.getString("Lives") == null){
+					playerConfig.set("Lives", plugin.getConfig().getInt("Lives"));
+				}
+				if(playerConfig.getString("Banned") == null){
+					playerConfig.set("Banned", false);
+				}
+				if(playerConfig.getString("Time") == null){
+					playerConfig.set("Time", 0);
+				}
+				try {
+					playerConfig.save(file);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				if(playerConfig.getBoolean("Banned")){
+					if(playerConfig.getLong("Time") == -1){
+						String message = plugin.getConfig().getString("Perm-Ban.Kick-Message");
+						event.setCancelled(true);
+						event.getPlayer().sendMessage(ChatColor.RED + message);
+					}else{
+						DataSource.instance.tempBanCheck(player, event.getFrom(), "world");
+					}
+				}
 			}
 		}
 	}

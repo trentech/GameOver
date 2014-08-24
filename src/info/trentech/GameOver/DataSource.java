@@ -16,6 +16,7 @@ import java.util.UUID;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -136,7 +137,7 @@ public class DataSource{
 		return time;
 	}
 	
-	public void tempBanCheck(Player player){
+	public void tempBanCheck(Player player, Location location, String banType){
 		File file = new File(plugin.getDataFolder() + "/players/", player.getUniqueId().toString() + ".yml");
 		YamlConfiguration playerConfig = YamlConfiguration.loadConfiguration(file);		
 		String playerDateStr = playerConfig.getString("Time");
@@ -152,7 +153,13 @@ public class DataSource{
 		if(!(time - compare <= 0)){
 			String remaining = formatTime(time - compare);
 			String message = plugin.getConfig().getString("Temp-Ban.Kick-Message").replace("%T", remaining);
-			player.kickPlayer(message);
+			if(banType.equalsIgnoreCase("global")){
+				player.kickPlayer(message);
+			}else{
+				player.teleport(location);
+				player.sendMessage(ChatColor.RED + message);
+			}
+			
 		}else{
 			playerConfig.set("Banned", false);
 			playerConfig.set("Time", 0);
