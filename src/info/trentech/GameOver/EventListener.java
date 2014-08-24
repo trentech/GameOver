@@ -31,7 +31,7 @@ public class EventListener implements Listener{
 		List<String> uuids = uuidConfig.getStringList("uuid");
 		boolean b = false;
 		for(String uuidStr : uuids){
-			String[] str = uuid.split(";");
+			String[] str = uuidStr.split(";");
 			if(str[0].equals(uuid)){
 				if(!str[1].equalsIgnoreCase(player.getName())){
 					uuids.remove(uuidStr);	
@@ -74,7 +74,12 @@ public class EventListener implements Listener{
 				event.setKickMessage(message);
 				event.setResult(Result.KICK_BANNED);			
 			}else{
-				DataSource.instance.tempBanCheck(player);
+				String remaining = DataSource.instance.tempBanCheck(player);
+				if(remaining != null){
+					String message = plugin.getConfig().getString("Temp-Ban.Kick-Message").replace("%T", remaining);
+					event.setKickMessage(message);
+					event.setResult(Result.KICK_BANNED);
+				}
 			}
 		}
 	}

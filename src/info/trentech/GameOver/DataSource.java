@@ -136,7 +136,8 @@ public class DataSource{
 		return time;
 	}
 	
-	public void tempBanCheck(Player player){
+	public String tempBanCheck(Player player){
+		String remaining = null;
 		File file = new File(plugin.getDataFolder() + "/players/", player.getUniqueId().toString() + ".yml");
 		YamlConfiguration playerConfig = YamlConfiguration.loadConfiguration(file);		
 		String playerDateStr = playerConfig.getString("Time");
@@ -150,9 +151,7 @@ public class DataSource{
 		long compare = TimeUnit.MILLISECONDS.toSeconds(date.getTime() - playerDate.getTime());
 		long time = getTime();
 		if(!(time - compare <= 0)){
-			String remaining = formatTime(time - compare);
-			String message = plugin.getConfig().getString("Temp-Ban.Kick-Message").replace("%T", remaining);
-			player.kickPlayer(message);
+			remaining = formatTime(time - compare);
 		}else{
 			playerConfig.set("Banned", false);
 			playerConfig.set("Time", 0);
@@ -162,6 +161,7 @@ public class DataSource{
 				e.printStackTrace();
 			}
 		}
+		return remaining;
 	}
 	
 	static String formatTime(long timeInSec) {
