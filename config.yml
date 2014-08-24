@@ -10,13 +10,9 @@ Remove-Money: true
 Temp-Ban:
   Enable: false
   Time: 1h
-  Kick-Message: Temporarily for %T
 # Permanently ban player forever! SERVER WIDE
 Perm-Ban:
   Enable: false
-  Kick-Message: You lost! The dead cannot be brought back to life.
-# Whether bans are world specific of global. ex. world, global
-Ban-Type: world
 # Enabled Worlds
 Worlds:
 - world

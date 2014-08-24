@@ -1,9 +1,11 @@
 package info.trentech.GameOver.InvManager;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 
 import info.trentech.GameOver.GameOver;
 
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -21,6 +23,7 @@ import org.bukkit.event.world.WorldSaveEvent;
 
 public class InvListener implements Listener{
 	 
+	@SuppressWarnings("unused")
 	private GameOver plugin;
 	public InvListener(GameOver plugin) {
 		this.plugin = plugin;
@@ -57,7 +60,12 @@ public class InvListener implements Listener{
 	
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onWorldSaveEvent(WorldSaveEvent event){
-		Collection<? extends Player> players = plugin.getServer().getOnlinePlayers();
+		Collection<?> players = null;
+		try{
+			players = ((Collection<?>)Bukkit.class.getMethod("getOnlinePlayers", new Class<?>[0]).invoke(null, new Object[0]));
+		}catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
+				e.printStackTrace();
+		}
 		for(Object pl : players){
 			Player player = (Player) pl;
 			InvSource.instance.savePlayer(player, InvSource.instance.getWorldGroup(player.getWorld()));
