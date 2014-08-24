@@ -22,8 +22,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.world.WorldSaveEvent;
 
 public class InvListener implements Listener{
-	 
-	@SuppressWarnings("unused")
+
 	private GameOver plugin;
 	public InvListener(GameOver plugin) {
 		this.plugin = plugin;
@@ -116,7 +115,16 @@ public class InvListener implements Listener{
 	public void onEntityDamageEvent (EntityDamageEvent event) {
 		if(event.getEntity() instanceof Player){
 			Player player = (Player) event.getEntity();
-			InvSource.instance.savePlayer(player, InvSource.instance.getWorldGroup(player.getWorld()));
+			boolean b = true;
+			if(plugin.essSupport){
+				if(plugin.essentials.getUser(player).isGodModeEnabled()){
+					b = false;
+				}
+			}
+			if(b){
+				System.out.println("TEST");
+				InvSource.instance.savePlayer(player, InvSource.instance.getWorldGroup(player.getWorld()));
+			}
 		}
 	}
 	 
