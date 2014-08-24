@@ -222,6 +222,7 @@ public class DataSource{
 		for(Entry<UUID, String> key : keys){
 			if(key.getValue().equalsIgnoreCase(playerName)){
 				uuid = key.getKey();
+				break;
 			}
 		}
 		return uuid;

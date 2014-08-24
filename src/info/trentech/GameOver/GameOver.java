@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
@@ -21,7 +20,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -82,7 +80,22 @@ public class GameOver extends JavaPlugin {
 				e.printStackTrace();
 			}
 		}
-    	
+		
+		File uuidFile = new File(getDataFolder(), "uuid.yml");   
+		if(!uuidFile.exists()){
+		    try {
+				uuidFile.createNewFile();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		YamlConfiguration uuidConfig = YamlConfiguration.loadConfiguration(uuidFile);
+		List<String> uuids = uuidConfig.getStringList("uuid");
+		for(String uuid : uuids){
+			String[] str = uuid.split(";");
+			players.put(UUID.fromString(str[0]), str[1]);
+		}
+		
     	setupEconomy();	
 		setupLogBlock();
 		setupEssentials();
@@ -104,11 +117,6 @@ public class GameOver extends JavaPlugin {
 			InvSource.instance.createGroupTable("inactive");
 			log.warning(String.format("[%s] Creating database!", new Object[] {getDescription().getName()}));
 		}
-		
-		Collection<? extends Player> onlinePlayers = getServer().getOnlinePlayers();
-    	for(Player player : onlinePlayers){
-    		players.put(player.getUniqueId(), player.getName());
-    	}
 	}
 	
 	private void setupEconomy() {
@@ -174,8 +182,13 @@ public class GameOver extends JavaPlugin {
 					sender.sendMessage(ChatColor.DARK_RED + "You do not have permission!");
 				}
 			}else if(args.length == 2 && args[0].equalsIgnoreCase("reset")){
-				if(getServer().getPlayer(DataSource.instance.getUUID(args[1])) != null){
-					
+				UUID uuid = DataSource.instance.getUUID(args[1]);
+				File file = new File(getDataFolder() + "/players/" + uuid + ".yml");
+				if(file.exists()){
+					file.delete();
+					sender.sendMessage(ChatColor.DARK_GREEN + args[1] + " reset!");
+				}else{
+					sender.sendMessage(ChatColor.DARK_RED + args[1] + " does not exist!");
 				}
 			}else{
 				sender.sendMessage(ChatColor.YELLOW + "/go reset [player]");

@@ -1,6 +1,6 @@
 name: GameOver
 main: info.trentech.GameOver.GameOver
-version: 0.6.7
+version: 0.6.8
 softdepend: [Essentials, LogBlock, Vault]
 commands:
   gameover:
@@ -10,4 +10,6 @@ Permissions:
   GameOver.use:
     default: false
   GameOver.reload:
+    default: true
+  GameOver.reset:
     default: true
