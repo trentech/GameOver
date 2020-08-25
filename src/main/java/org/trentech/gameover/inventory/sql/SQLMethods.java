@@ -3,20 +3,24 @@ package org.trentech.gameover.inventory.sql;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Optional;
 
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.io.BukkitObjectInputStream;
 import org.bukkit.util.io.BukkitObjectOutputStream;
+import org.trentech.gameover.inventory.PlayerData;
 
 public abstract class SQLMethods extends SQLUtils {
 
 	public boolean loaded = false;
-    private Object lock = new Object();
+    private static Object lock = new Object();
 	
 	public boolean tableExist(String group) {
 		boolean b = false;
@@ -62,237 +66,85 @@ public abstract class SQLMethods extends SQLUtils {
 		return b;
 	}
 	
-	public void createPlayerInv(String uuid, String group) {
+	public void create(Player player, String group) {
 		synchronized (lock) {
+			ItemStack[] inv = player.getInventory().getContents();
+			ItemStack[] armor = player.getInventory().getArmorContents();
+			
 			try {
-				PreparedStatement statement = prepare("INSERT into " + group + " (Player, Inventory, Armor, Health, Experience, Level, Food, Saturation) VALUES (?, null, null, 20, 0, 0, 20, 20)");	
-				statement.setString(1, "`" + uuid + "`");
+				Connection connection = getConnection();
+				PreparedStatement statement = connection.prepareStatement("INSERT into " + group + " (Player, Inventory, Armor, Health, Experience, Level, Food, Saturation) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+				
+				statement.setString(1, "`" + player.getUniqueId().toString() + "`");
+				statement.setBytes(2, serialize(inv));
+				statement.setBytes(3, serialize(armor));
+				statement.setDouble(4, player.getHealth());
+				statement.setFloat(5, player.getExp());
+				statement.setInt(6, player.getExpToLevel());
+				statement.setInt(7, player.getFoodLevel());
+				statement.setFloat(8, player.getSaturation());
+				
 				statement.executeUpdate();
-			} catch (SQLException e) {
-				System.out.println("Unable to connect to Database!");
-				System.out.println(e.getMessage());
+				
+				statement.close();
+				connection.close();
+			} catch (SQLException | IOException e) {
+				e.printStackTrace();
 			}
 		}
 	}
-	
-	public void savePlayerInv(String uuid, String group, byte[] inv, byte[] armor) {
+
+	public static void update(Player player, String group) {
 		synchronized (lock) {
+			ItemStack[] inv = player.getInventory().getContents();
+			ItemStack[] armor = player.getInventory().getArmorContents();
+
 			try {
-				if(inv != null){
-					PreparedStatement statement = prepare("UPDATE " + group + " SET Inventory = ? WHERE Player = ?");				
-					statement.setBytes(1, inv);
-					statement.setString(2, "`" + uuid + "`");
-					statement.executeUpdate();
-				}
-				if(armor != null){
-					PreparedStatement statement = prepare("UPDATE " + group + " SET Armor = ? WHERE Player = ?");
-					statement.setBytes(1, armor);
-					statement.setString(2, "`" + uuid + "`");
-					statement.executeUpdate();
-				}
-			} catch (SQLException e) {
-				System.out.println("Unable to connect to Database!");
-				System.out.println(e.getMessage());
-			}
-		}
-	}
+				Connection connection = getConnection();
+				PreparedStatement statement = connection.prepareStatement("UPDATE " + group + " SET Inventory = ?, Armor = ?, Health = ?, Experience = ?, Level = ?, Food = ?, Saturation = ? WHERE Player = ?");
 	
-	public byte[] getPlayerInv(String uuid, String group) {
-		byte[] inv = null;
-		try {
-			PreparedStatement statement = prepare("SELECT * FROM " + group);
-			ResultSet rs = statement.executeQuery();
-			while (rs.next()){
-				if (rs.getString("Player").equalsIgnoreCase("`" + uuid + "`")) {
-					inv = rs.getBytes("Inventory");
-					break;
-				}
-			}
-		} catch (SQLException ex) {
-			System.out.println("Unable to connect to Database!");
-			System.out.println(ex.getMessage());
-		}
-		return inv;
-	}
-	
-	public byte[] getPlayerArm(String uuid, String group) {
-		byte[] armor = null;
-		try {
-			PreparedStatement statement = prepare("SELECT * FROM " + group);
-			ResultSet rs = statement.executeQuery();
-			while (rs.next()){
-				if (rs.getString("Player").equalsIgnoreCase("`" + uuid + "`")) {
-					armor = rs.getBytes("Armor");
-					break;
-				}
-			}	
-		} catch (SQLException ex) {
-			System.out.println("Unable to connect to Database!");
-			System.out.println(ex.getMessage());
-		}
-		return armor;
-	}
-	
-	public float getPlayerExp(String uuid, String group){
-		float xp = 0;
-		try {
-			PreparedStatement statement = prepare("SELECT * FROM " + group);
-			ResultSet rs = statement.executeQuery();
-			while (rs.next()){
-				if (rs.getString("Player").equalsIgnoreCase("`" + uuid + "`")) {
-					xp = rs.getFloat("Experience");
-					break;
-				}
-			}	
-		} catch (SQLException ex) {
-			System.out.println("Unable to connect to Database!");
-			System.out.println(ex.getMessage());
-		}
-		return xp;
-	}
-	
-	public void savePlayerExp(String uuid, String group, float exp){
-		synchronized (lock) {
-			try{
-				PreparedStatement statement = prepare("UPDATE " + group + " SET Experience = ? WHERE Player = ?");
-				statement.setFloat(1, exp);
-				statement.setString(2, "`" + uuid + "`");
+				statement.setBytes(1, serialize(inv));
+				statement.setBytes(2, serialize(armor));
+				statement.setDouble(3, player.getHealth());
+				statement.setFloat(4, player.getExp());
+				statement.setInt(5, player.getExpToLevel());
+				statement.setInt(6, player.getFoodLevel());
+				statement.setFloat(7, player.getSaturation());
+				statement.setString(2, "`" + player.getUniqueId().toString() + "`");
 				statement.executeUpdate();
-			} catch (SQLException ex) {
-				System.out.println("Unable to connect to Database!");
-				System.out.println(ex.getMessage());
+				
+				statement.close();
+				connection.close();
+			} catch (SQLException | IOException e) {
+				e.printStackTrace();
 			}
 		}
 	}
 	
-	public int getPlayerExpLevel(String uuid, String group){
-		int xp = 0;
+	public static Optional<PlayerData> getPlayerData(Player player, String group) {
+		Optional<PlayerData> optional = Optional.empty();
+		
 		try {
-			PreparedStatement statement = prepare("SELECT * FROM " + group);
-			ResultSet rs = statement.executeQuery();
-			while (rs.next()){
-				if (rs.getString("Player").equalsIgnoreCase(uuid)) {
-					xp = rs.getInt("Level");
+			Connection connection = getConnection();
+			ResultSet result = connection.createStatement().executeQuery("SELECT * FROM " + group);
+
+			while (result.next()){
+				if (result.getString("Player").equalsIgnoreCase("`" + player.getUniqueId().toString() + "`")) {
+					optional = Optional.of(new PlayerData(player.getUniqueId(), deserialize(result.getBytes("Inventory")), deserialize(result.getBytes("Armor")), result.getDouble("Health"), result.getFloat("Experience"), result.getInt("Level"), result.getInt("Food"), result.getFloat("Saturation")));
 					break;
 				}
-			}	
-		} catch (SQLException ex) {
-			System.out.println("Unable to connect to Database!");
-			System.out.println(ex.getMessage());
-		}
-		return xp;
-	}
-	
-	public void savePlayerExpLevel(String uuid, String group, int exp){
-		synchronized (lock) {
-			try{
-				PreparedStatement statement = prepare("UPDATE " + group + " SET Level = ? WHERE Player = ?");
-				statement.setInt(1, exp);
-				statement.setString(2, "`" + uuid + "`");
-				statement.executeUpdate();
-			} catch (SQLException ex) {
-				System.out.println("Unable to connect to Database!");
-				System.out.println(ex.getMessage());
 			}
+			
+			result.close();
+			connection.close();
+		} catch (SQLException | ClassNotFoundException | IOException e) {
+			e.printStackTrace();
 		}
+		
+		return optional;
 	}
-	
-	public int getPlayerFoodLev(String uuid, String group){
-		int food = 0;
-		try {
-			PreparedStatement statement = prepare("SELECT * FROM " + group);
-			ResultSet rs = statement.executeQuery();
-			while (rs.next()){
-				if (rs.getString("Player").equalsIgnoreCase("`" + uuid + "`")) {
-					food = rs.getInt("Food");
-					break;
-				}
-			}	
-		} catch (SQLException ex) {
-			System.out.println("Unable to connect to Database!");
-			System.out.println(ex.getMessage());
-		}
-		return food;
-	}
-	
-	public void savePlayerFoodLev(String uuid, String group, int food){
-		synchronized (lock) {
-			try{
-				PreparedStatement statement = prepare("UPDATE " + group + " SET Food = ? WHERE Player = ?");
-				statement.setInt(1, food);
-				statement.setString(2, "`" + uuid + "`");
-				statement.executeUpdate();
-			} catch (SQLException ex) {
-				System.out.println("Unable to connect to Database!");
-				System.out.println(ex.getMessage());
-			}
-		}
-	}
-	
-	public float getPlayerSat(String uuid, String group){
-		float sat = 0;
-		try {
-			PreparedStatement statement = prepare("SELECT * FROM " + group);
-			ResultSet rs = statement.executeQuery();
-			while (rs.next()){
-				if (rs.getString("Player").equalsIgnoreCase("`" + uuid + "`")) {
-					sat = rs.getFloat("Saturation");
-					break;
-				}
-			}	
-		} catch (SQLException ex) {
-			System.out.println("Unable to connect to Database!");
-			System.out.println(ex.getMessage());
-		}
-		return sat;
-	}
-	
-	public void savePlayerSat(String uuid, String group, float sat){
-		synchronized (lock) {
-			try{
-				PreparedStatement statement = prepare("UPDATE " + group + " SET Saturation = ? WHERE Player = ?");
-				statement.setFloat(1, sat);
-				statement.setString(2, "`" + uuid + "`");
-				statement.executeUpdate();
-			} catch (SQLException ex) {
-				System.out.println("Unable to connect to Database!");
-				System.out.println(ex.getMessage());
-			}
-		}
-	}
-	
-	public double getPlayerHlth(String uuid, String group){
-		double health = 0;
-		try {
-			PreparedStatement statement = prepare("SELECT * FROM " + group);
-			ResultSet rs = statement.executeQuery();
-			while (rs.next()){
-				if (rs.getString("Player").equalsIgnoreCase("`" + uuid + "`")) {
-					health = rs.getDouble("Health");
-					break;
-				}
-			}	
-		} catch (SQLException ex) {
-			System.out.println("Unable to connect to Database!");
-			System.out.println(ex.getMessage());
-		}
-		return health;
-	}
-	
-	public void savePlayerHlth(String uuid, String group, double health){
-		synchronized (lock) {
-			try{
-				PreparedStatement statement = prepare("UPDATE " + group + " SET Health = ? WHERE Player = ?");
-				statement.setDouble(1, health);
-				statement.setString(2, "`" + uuid + "`");
-				statement.executeUpdate();
-			} catch (SQLException ex) {
-				System.out.println("Unable to connect to Database!");
-				System.out.println(ex.getMessage());
-			}
-		}
-	}
-	
+
+
 	public void deletePlayerData(String uuid, String group){
 		try {
 			PreparedStatement statement = prepare("DELETE from " + group + " WHERE Player = ?");

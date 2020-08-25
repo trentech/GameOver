@@ -11,6 +11,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.io.BukkitObjectInputStream;
 import org.bukkit.util.io.BukkitObjectOutputStream;
+import org.trentech.easykits.kits.Kit;
+import org.trentech.easykits.sql.SQLKits;
 import org.trentech.gameover.Main;
 import org.trentech.gameover.inventory.sql.SQLMethods;
 
@@ -23,21 +25,32 @@ public class PlayerService extends SQLMethods {
 		return service;
 	}
 	
-	public void savePlayerInventory(Player player, String group, ItemStack[] invArray, ItemStack[] armorArray){
-		ByteArrayOutputStream inv = new ByteArrayOutputStream();
-		ByteArrayOutputStream arm = new ByteArrayOutputStream();
-	    try {
-	        BukkitObjectOutputStream invObjOS = new BukkitObjectOutputStream(inv);
-	        invObjOS.writeObject(invArray);
-	        invObjOS.close();
-	        BukkitObjectOutputStream armorObjOS = new BukkitObjectOutputStream(arm);
-	        armorObjOS.writeObject(armorArray);
-	        armorObjOS.close();
-	    } catch (IOException ioexception) {
-	        ioexception.printStackTrace();
-	    }
-	    savePlayerInv(player.getUniqueId().toString(), group, inv.toByteArray(), arm.toByteArray());
+	public void saveInventory(Player player, String group) {
+		if (SQLMethods.getInventory(player, group).isPresent()) {
+			SQLMethods.update(player, group);
+		} else {
+			SQLMethods.create(player, group);
+		}
 	}
+	
+	public void savePlayerInventory(Player player, String group, boolean empty){
+		savePlayerInv(player.getUniqueId().toString(), group);
+	}
+//	public void savePlayerInventory(Player player, String group, ItemStack[] invArray, ItemStack[] armorArray){
+//		ByteArrayOutputStream inv = new ByteArrayOutputStream();
+//		ByteArrayOutputStream arm = new ByteArrayOutputStream();
+//	    try {
+//	        BukkitObjectOutputStream invObjOS = new BukkitObjectOutputStream(inv);
+//	        invObjOS.writeObject(invArray);
+//	        invObjOS.close();
+//	        BukkitObjectOutputStream armorObjOS = new BukkitObjectOutputStream(arm);
+//	        armorObjOS.writeObject(armorArray);
+//	        armorObjOS.close();
+//	    } catch (IOException ioexception) {
+//	        ioexception.printStackTrace();
+//	    }
+//	    
+//	}
 	
 	public ItemStack[] getPlayerInventory(Player player, String group){
 		Object inv = null;
@@ -143,9 +156,7 @@ public class PlayerService extends SQLMethods {
 	}
 	
 	public void savePlayer(Player player, String group){
-		ItemStack[] invArray = player.getInventory().getContents();
-		ItemStack[] armorArray = player.getInventory().getArmorContents();
-		savePlayerInventory(player, group, invArray, armorArray);
+		savePlayerInventory(player, group, false);
 		savePlayerExperience(player, group);
 		savePlayerFood(player, group);
 		savePlayerHealth(player, group);
@@ -153,6 +164,5 @@ public class PlayerService extends SQLMethods {
 	
 	public void createPlayerInventory(Player player, String group){
 		createPlayerInv(player.getUniqueId().toString(), group);
-		savePlayerInventory(player, group, null, null);
 	}
 }

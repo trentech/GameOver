@@ -133,7 +133,6 @@ public class PlayerListener implements Listener {
 				}
 			}
 			if(b){
-				System.out.println("TEST");
 				PlayerService playerService = PlayerService.instance();
 				playerService.savePlayer(player, playerService.getWorldGroup(player.getWorld()));
 			}
