@@ -1,12 +1,19 @@
-package info.trentech.GameOver.InvManager.SQL;
+package org.trentech.gameover.inventory.sql;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-public abstract class SQLMethods extends SQLUtils{
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.util.io.BukkitObjectInputStream;
+import org.bukkit.util.io.BukkitObjectOutputStream;
+
+public abstract class SQLMethods extends SQLUtils {
 
 	public boolean loaded = false;
     private Object lock = new Object();
@@ -297,4 +304,30 @@ public abstract class SQLMethods extends SQLUtils{
 		} 
 	}
 
+	private static ItemStack[] deserialize(byte[] data) throws IOException, ClassNotFoundException {
+		ItemStack[] contents = null;
+
+		ByteArrayInputStream arrayInputStream = new ByteArrayInputStream(data);
+        BukkitObjectInputStream objectInputStream = new BukkitObjectInputStream(arrayInputStream);
+        
+        contents =  (ItemStack[]) objectInputStream.readObject();
+        
+        arrayInputStream.close();
+        objectInputStream.close();
+
+		return contents;
+	}
+	
+	private static byte[] serialize(ItemStack[] contents) throws IOException {
+		ByteArrayOutputStream arrayOutputStream= new ByteArrayOutputStream();
+
+    	BukkitObjectOutputStream objectOutputStream = new BukkitObjectOutputStream(arrayOutputStream);
+    	objectOutputStream.writeObject(contents);
+    	
+    	arrayOutputStream.close();
+    	objectOutputStream.close();
+    	
+    	return arrayOutputStream.toByteArray();
+	}
+	
 }

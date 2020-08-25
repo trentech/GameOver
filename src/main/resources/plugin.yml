@@ -1,7 +1,12 @@
 name: GameOver
-main: info.trentech.GameOver.GameOver
-version: 0.6.7
+version: 0.7.0
+main: org.trentech.gameover.Main
+api-version: 1.13
+authors: [TrenTech]
+description: You Lose!
+website: trentech.org
 softdepend: [Essentials, LogBlock, Vault]
+load: POSTWORLD
 commands:
   gameover:
     usage: </command>

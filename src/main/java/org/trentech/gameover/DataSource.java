@@ -1,6 +1,4 @@
-package info.trentech.GameOver;
-
-import info.trentech.GameOver.InvManager.InvSource;
+package org.trentech.gameover;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,58 +9,56 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
-import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.trentech.gameover.inventory.PlayerService;
 
 import de.diddiz.LogBlock.QueryParams;
 
-public class DataSource{
+public class DataSource {
 
-	private static GameOver plugin;
-	public DataSource(GameOver plugin) {
-		DataSource.plugin = plugin;
+	public static DataSource get() {
+		return new DataSource();
 	}
-	
-	public static DataSource instance = new DataSource(plugin);
 	
 	public void deletePlayerData(Player player){
 		player.kickPlayer("Game Over!");
 		deleteMoney(player);
 		doRollback(player);
 		deleteEssenHomes(player);
-		InvSource.instance.deletePlayerData(player.getUniqueId().toString(), "active");
+		PlayerService.instance().deletePlayerData(player.getUniqueId().toString(), "active");
 		setBan(player);
 	}
 	
 	public void deleteMoney(Player player){
-		if(plugin.econSupport){
-			if(plugin.getConfig().getBoolean("Remove-Money")){
-				plugin.economy.withdrawPlayer(player, plugin.economy.getBalance(player));
+		if(Main.getPlugin().econSupport){
+			if(Main.getPlugin().getConfig().getBoolean("Remove-Money")){
+				Main.getPlugin().economy.withdrawPlayer(player, Main.getPlugin().economy.getBalance(player));
 			}
 		}
 	}
 	
 	public void deleteEssenHomes(Player player){
-		if(plugin.essSupport){
-			if(plugin.getConfig().getBoolean("Delete-Essentials-Homes")){
-				List<String> homes = plugin.essentials.getUser(player).getHomes();
-				plugin.essentials.getUser(player).saveData();
-				plugin.essentials.getUser(player).reloadConfig();
+		if(Main.getPlugin().essSupport){
+			if(Main.getPlugin().getConfig().getBoolean("Delete-Essentials-Homes")){
+				List<String> homes = Main.getPlugin().essentials.getUser(player).getHomes();
+				Main.getPlugin().essentials.getUser(player).save();
+				Main.getPlugin().essentials.getUser(player).reloadConfig();
 				for(String home : homes){
 					try {
-						Location homeLoc = plugin.essentials.getUser(player).getHome(home);
+						Location homeLoc = Main.getPlugin().essentials.getUser(player).getHome(home);
 						World world = homeLoc.getWorld();
-						if(plugin.getConfig().getStringList("Worlds").contains(world.getName())){
-							plugin.essentials.getUser(player).delHome(home);
-							plugin.essentials.getUser(player).saveData();
-							plugin.essentials.getUser(player).reloadConfig();
+						if(Main.getPlugin().getConfig().getStringList("Worlds").contains(world.getName())){
+							Main.getPlugin().essentials.getUser(player).delHome(home);
+							Main.getPlugin().essentials.getUser(player).save();
+							Main.getPlugin().essentials.getUser(player).reloadConfig();
 						}
 					} catch (Exception e) {
 						e.printStackTrace();
@@ -73,16 +69,16 @@ public class DataSource{
 	}
 	
 	public void setBan(Player player){
-		File file = new File(plugin.getDataFolder() + "/players/", player.getUniqueId().toString() + ".yml");
+		File file = new File(Main.getPlugin().getDataFolder() + "/players/", player.getUniqueId().toString() + ".yml");
 		YamlConfiguration playerConfig = YamlConfiguration.loadConfiguration(file);
-		if(plugin.getConfig().getBoolean("Temp-Ban.Enable")){
+		if(Main.getPlugin().getConfig().getBoolean("Temp-Ban.Enable")){
 			DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 			Date date = new Date();
 			String strDate = dateFormat.format(date).toString();
 			playerConfig.set("Banned", true);
 			playerConfig.set("Time", strDate);
 		}
-		if(plugin.getConfig().getBoolean("Perm-Ban.Enable")){
+		if(Main.getPlugin().getConfig().getBoolean("Perm-Ban.Enable")){
 			playerConfig.set("Banned", true);
 			playerConfig.set("Time", -1);	
 		}	
@@ -94,19 +90,19 @@ public class DataSource{
 	}
 	
 	public void doRollback(Player player){
-		if(plugin.lbSupport){
-			if(plugin.getConfig().getBoolean("Rollback")){
-				List<String> worlds = plugin.getConfig().getStringList("Worlds");
+		if(Main.getPlugin().lbSupport){
+			if(Main.getPlugin().getConfig().getBoolean("Rollback")){
+				List<String> worlds = Main.getPlugin().getConfig().getStringList("Worlds");
 				for(String worldName : worlds){
-					World world = plugin.getServer().getWorld(worldName);
-					QueryParams params = new QueryParams(plugin.logBlock);
+					World world = Main.getPlugin().getServer().getWorld(worldName);
+					QueryParams params = new QueryParams(Main.getPlugin().logBlock);
 					params.setPlayer(player.getName());
 					params.world = world;
 					params.silent = true;
 					try {
-					    plugin.logBlock.getCommandsHandler().new CommandRollback(plugin.getServer().getConsoleSender(), params, true);
+					    Main.getPlugin().logBlock.getCommandsHandler().new CommandRollback(Main.getPlugin().getServer().getConsoleSender(), params, true);
 					} catch (Exception ex) {
-						plugin.log.severe(String.format("[%s] Failed to rollback blocks", new Object[] {plugin.getDescription().getName()}));
+						Main.getPlugin().getLogger().severe(String.format("[%s] Failed to rollback blocks", new Object[] {Main.getPlugin().getDescription().getName()}));
 					}
 				}
 			}
@@ -115,7 +111,7 @@ public class DataSource{
 	
 	public long getTime(){
 		long time = 0;
-		String[] strTime = plugin.getConfig().getString("Temp-Ban.Time").split(" ");
+		String[] strTime = Main.getPlugin().getConfig().getString("Temp-Ban.Time").split(" ");
 		for(String t : strTime){
 			if(t.matches("(^\\d*)(?i)[s]$")){
 				time = time + Integer.parseInt(t.replace("s", ""));
@@ -138,7 +134,7 @@ public class DataSource{
 	
 	public String tempBanCheck(Player player){
 		String remaining = null;
-		File file = new File(plugin.getDataFolder() + "/players/", player.getUniqueId().toString() + ".yml");
+		File file = new File(Main.getPlugin().getDataFolder() + "/players/", player.getUniqueId().toString() + ".yml");
 		YamlConfiguration playerConfig = YamlConfiguration.loadConfiguration(file);		
 		String playerDateStr = playerConfig.getString("Time");
 		Date date = new Date();
@@ -217,7 +213,7 @@ public class DataSource{
 	
 	public UUID getUUID(String playerName){
 		UUID uuid = null;
-		HashMap<UUID, String> players = plugin.players;
+		HashMap<UUID, String> players = Main.getPlugin().players;
 		Set<Map.Entry<UUID, String>> keys = players.entrySet();
 		for(Entry<UUID, String> key : keys){
 			if(key.getValue().equalsIgnoreCase(playerName)){

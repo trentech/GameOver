@@ -1,7 +1,4 @@
-package info.trentech.GameOver.InvManager;
-
-import info.trentech.GameOver.GameOver;
-import info.trentech.GameOver.InvManager.SQL.SQLMethods;
+package org.trentech.gameover.inventory;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -14,15 +11,17 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.io.BukkitObjectInputStream;
 import org.bukkit.util.io.BukkitObjectOutputStream;
+import org.trentech.gameover.Main;
+import org.trentech.gameover.inventory.sql.SQLMethods;
 
-public class InvSource extends SQLMethods{
+public class PlayerService extends SQLMethods {
 
-	private static GameOver plugin;
-	public InvSource(GameOver plugin) {
-		InvSource.plugin = plugin;
+
+	private static PlayerService service = new PlayerService();
+
+	public static PlayerService instance() {
+		return service;
 	}
-	
-	public static InvSource instance = new InvSource(GameOver.plugin);
 	
 	public void savePlayerInventory(Player player, String group, ItemStack[] invArray, ItemStack[] armorArray){
 		ByteArrayOutputStream inv = new ByteArrayOutputStream();
@@ -117,7 +116,7 @@ public class InvSource extends SQLMethods{
 	}
 	
 	public String getWorldGroup(World world){
-		List<String> list = plugin.getConfig().getStringList("Worlds");
+		List<String> list = Main.getPlugin().getConfig().getStringList("Worlds");
 		if(list.contains(world.getName())){
 			return "active";
 		}else{

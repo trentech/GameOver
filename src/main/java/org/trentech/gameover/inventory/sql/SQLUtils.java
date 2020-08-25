@@ -1,4 +1,4 @@
-package info.trentech.GameOver.InvManager.SQL;
+package org.trentech.gameover.inventory.sql;
 
 import java.sql.Connection;
 import java.sql.Driver;

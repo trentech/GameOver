@@ -1,4 +1,4 @@
-package info.trentech.GameOver;
+package org.trentech.gameover.events;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,20 +13,17 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerLoginEvent.Result;
+import org.trentech.gameover.DataSource;
+import org.trentech.gameover.Main;
 
-public class EventListener implements Listener{
-	
-	private GameOver plugin;
-	public EventListener(GameOver plugin) {
-		this.plugin = plugin;
-	}
-	
+public class EventListener implements Listener {
+
 	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onPlayerLoginEvent(PlayerLoginEvent event){
 		Player player = event.getPlayer();
 		String uuid = player.getUniqueId().toString();
-		plugin.players.put(player.getUniqueId(), player.getName());
-		File uuidFile = new File(plugin.getDataFolder(), "uuid.yml");  
+		Main.getPlugin().players.put(player.getUniqueId(), player.getName());
+		File uuidFile = new File(Main.getPlugin().getDataFolder(), "uuid.yml");  
 		YamlConfiguration uuidConfig = YamlConfiguration.loadConfiguration(uuidFile);
 		List<String> uuids = uuidConfig.getStringList("uuid");
 		boolean b = false;
@@ -52,10 +49,10 @@ public class EventListener implements Listener{
 		}
 
 		
-		File file = new File(this.plugin.getDataFolder() + "/players/", uuid + ".yml");
+		File file = new File(Main.getPlugin().getDataFolder() + "/players/", uuid + ".yml");
 		YamlConfiguration playerConfig = YamlConfiguration.loadConfiguration(file);
 		if(playerConfig.getString("Lives") == null){
-			playerConfig.set("Lives", plugin.getConfig().getInt("Lives"));
+			playerConfig.set("Lives", Main.getPlugin().getConfig().getInt("Lives"));
 		}
 		if(playerConfig.getString("Banned") == null){
 			playerConfig.set("Banned", false);
@@ -70,13 +67,13 @@ public class EventListener implements Listener{
 		}
 		if(playerConfig.getBoolean("Banned")){
 			if(playerConfig.getLong("Time") == -1){
-				String message = plugin.getConfig().getString("Perm-Ban.Kick-Message");
+				String message = Main.getPlugin().getConfig().getString("Perm-Ban.Kick-Message");
 				event.setKickMessage(message);
 				event.setResult(Result.KICK_BANNED);			
 			}else{
-				String remaining = DataSource.instance.tempBanCheck(player);
+				String remaining = DataSource.get().tempBanCheck(player);
 				if(remaining != null){
-					String message = plugin.getConfig().getString("Temp-Ban.Kick-Message").replace("%T", remaining);
+					String message = Main.getPlugin().getConfig().getString("Temp-Ban.Kick-Message").replace("%T", remaining);
 					event.setKickMessage(message);
 					event.setResult(Result.KICK_BANNED);
 				}
@@ -89,21 +86,21 @@ public class EventListener implements Listener{
 		if(event.getEntity() instanceof Player){
 			Player player = (Player) event.getEntity();
 			String uuid = player.getUniqueId().toString();
-			List<String> worlds = plugin.getConfig().getStringList("Worlds");
+			List<String> worlds = Main.getPlugin().getConfig().getStringList("Worlds");
 			if(worlds.contains(player.getWorld().getName())){
 				if(player.hasPermission("GameOver.use")){
-					File file = new File(this.plugin.getDataFolder() + "/players/", uuid + ".yml");
+					File file = new File(Main.getPlugin().getDataFolder() + "/players/", uuid + ".yml");
 					YamlConfiguration playerConfig = YamlConfiguration.loadConfiguration(file);	
 					int lives = playerConfig.getInt("Lives");
 					if((playerConfig.getInt("Lives") - 1) <= 0){
 						event.getDrops().clear();
-						playerConfig.set("Lives", plugin.getConfig().getInt("Lives"));
+						playerConfig.set("Lives", Main.getPlugin().getConfig().getInt("Lives"));
 						try {
 							playerConfig.save(file);
 						} catch (IOException e) {
 							e.printStackTrace();
 						}
-						DataSource.instance.deletePlayerData(player);					
+						DataSource.get().deletePlayerData(player);					
 					}else{
 						playerConfig.set("Lives", lives - 1);
 						player.sendMessage(ChatColor.YELLOW + "Lives: " + (lives - 1));
