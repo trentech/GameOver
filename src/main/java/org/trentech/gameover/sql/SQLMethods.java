@@ -1,72 +1,42 @@
-package org.trentech.gameover.inventory.sql;
+package org.trentech.gameover.sql;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Optional;
 
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.io.BukkitObjectInputStream;
 import org.bukkit.util.io.BukkitObjectOutputStream;
-import org.trentech.gameover.inventory.PlayerData;
+import org.trentech.gameover.player.PlayerData;
 
 public abstract class SQLMethods extends SQLUtils {
 
 	public boolean loaded = false;
     private static Object lock = new Object();
 	
-	public boolean tableExist(String group) {
-		boolean b = false;
-		try {
-			Statement statement = getConnection().createStatement();
-			DatabaseMetaData md = statement.getConnection().getMetaData();
-			ResultSet rs = md.getTables(null, null, group , null);
-			if (rs.next()){
-				b = true;	
-			}		
-		} catch (SQLException ex) { }
-		return b;
-	}
-		
-	public void createGroupTable(String group) {
+	public static void createGroupTable(String group) {
 		synchronized (lock) {
 			try {
-				PreparedStatement statement;	
-					statement = prepare("CREATE TABLE " + group + "( id INTEGER PRIMARY KEY, Player TEXT, Inventory BLOB, Armor BLOB, Health INTEGER, Experience FLOAT, Level INTEGER, Food INTEGER, Saturation FLOAT)");
-					statement.executeUpdate();
+				Connection connection = getConnection();
+				PreparedStatement statement = connection.prepareStatement("CREATE TABLE IF NOT EXISTS" + group + "( id INTEGER PRIMARY KEY, Player TEXT, Inventory BLOB, Armor BLOB, Health INTEGER, Experience FLOAT, Level INTEGER, Food INTEGER, Saturation FLOAT)");
+				
+				statement.executeUpdate();
+				
+				statement.close();
+				connection.close();
 			} catch (SQLException e) {
-				System.out.println("Unable to connect to Database!");
-				System.out.println(e.getMessage());
+				e.printStackTrace();
 			}
 		}			
 	}
 
-	public boolean playerExist(String uuid, String group) {
-		boolean b = false;
-		try {
-			PreparedStatement statement = prepare("SELECT * FROM " + group);
-			ResultSet rs = statement.executeQuery();
-			while (rs.next()){
-				if (rs.getString("Player").equalsIgnoreCase("`" + uuid + "`")) {
-					b = true;
-					break;
-				}
-			}
-		} catch (SQLException ex) {
-			System.out.println("Unable to connect to Database!");
-			System.out.println(ex.getMessage());
-		}
-		return b;
-	}
-	
-	public void create(Player player, String group) {
+	public static void create(Player player, String group) {
 		synchronized (lock) {
 			ItemStack[] inv = player.getInventory().getContents();
 			ItemStack[] armor = player.getInventory().getArmorContents();
@@ -144,15 +114,18 @@ public abstract class SQLMethods extends SQLUtils {
 		return optional;
 	}
 
-
-	public void deletePlayerData(String uuid, String group){
+	public static void deletePlayerData(String uuid, String group){
 		try {
-			PreparedStatement statement = prepare("DELETE from " + group + " WHERE Player = ?");
+			Connection connection = getConnection();
+			PreparedStatement statement = connection.prepareStatement("DELETE from " + group + " WHERE Player = ?");
+			
 			statement.setString(1, "`" + uuid + "`");
 			statement.executeUpdate();
+			
+			statement.close();
+			connection.close();
 		}catch (SQLException e) {
-			System.out.println("Unable to connect to Database!");
-			System.out.println(e.getMessage());
+			e.printStackTrace();
 		} 
 	}
 
@@ -180,6 +153,5 @@ public abstract class SQLMethods extends SQLUtils {
     	objectOutputStream.close();
     	
     	return arrayOutputStream.toByteArray();
-	}
-	
+	}	
 }

@@ -1,11 +1,8 @@
-package org.trentech.gameover.inventory;
+package org.trentech.gameover.player;
 
 import java.util.UUID;
 
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.trentech.easykits.Main;
 
 public class PlayerData {
 
@@ -28,18 +25,9 @@ public class PlayerData {
 		this.foodLevel = foodLevel;
 		this.saturation = saturation;
 	}
-	
-	public Kit(String name, Player player, long cooldown, double price, int limit) {
-		this.name = name;
-		this.inventory = player.getInventory().getContents();
-		this.equipment = player.getInventory().getArmorContents();
-		this.cooldown = cooldown;
-		this.price = price;
-		this.limit = limit;
-	}
 
-	public String getName() {
-		return name;
+	public UUID getPlayerUUID() {
+		return playerUUID;
 	}
 
 	public ItemStack[] getInventory(){
@@ -49,19 +37,27 @@ public class PlayerData {
 	public ItemStack[] getEquipment(){
         return equipment;
 	}
-
-	public int getLimit(){
-		return limit;	
+	
+	public int getFoodLevel() {
+		return foodLevel;
 	}
 
-	public double getPrice(){
-		return price;
+	public int getExpLevel() {
+		return expLevel;
 	}
 
-	public long getCooldown(){
-		return cooldown;
+	public float getExperience() {
+		return experience;
 	}
 
+	public float getSaturation() {
+		return saturation;
+	}
+	
+	public void setPlayerUUID(UUID playerUUID) {
+		this.playerUUID = playerUUID;
+	}
+	
 	public void setInventory(ItemStack[] inventory){	
 		this.inventory = inventory;
 	}
@@ -69,16 +65,26 @@ public class PlayerData {
 	public void setEquipment(ItemStack[] equipment){	
 		this.equipment = equipment;
 	}
-
-	public void setLimit(int limit) {
-		this.limit = limit;
+	
+	public void setFoodLevel(int foodLevel) {
+		this.foodLevel = foodLevel;
+	}
+	public void setExpLevel(int expLevel) {
+		this.expLevel = expLevel;
+	}
+	public void setExperience(float experience) {
+		this.experience = experience;
 	}
 
-	public void setPrice(double price) {
-		this.price = price;
+	public void setHealth(double health) {
+		this.health = health;
 	}
 
-	public void setCooldown(long cooldown) {
-		this.cooldown = cooldown;
+	public void setSaturation(float saturation) {
+		this.saturation = saturation;
+	}
+
+	public double getHealth() {
+		return health;
 	}
 }

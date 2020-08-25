@@ -17,7 +17,9 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.world.WorldSaveEvent;
 import org.trentech.gameover.Main;
-import org.trentech.gameover.inventory.PlayerService;
+import org.trentech.gameover.player.PlayerService;
+
+import com.earth2me.essentials.Essentials;
 
 public class PlayerListener implements Listener {
 	
@@ -25,10 +27,7 @@ public class PlayerListener implements Listener {
 	public void onPlayerLoginEvent(PlayerJoinEvent event){
 		Player player = event.getPlayer();
 		PlayerService playerService = PlayerService.instance();
-		
-		if(!playerService.playerExist(player.getUniqueId().toString(), playerService.getWorldGroup(player.getWorld()))){
-			playerService.createPlayerInventory(player, playerService.getWorldGroup(player.getWorld()));
-		}		
+
 		playerService.updatePlayer(player, playerService.getWorldGroup(player.getWorld()));
 	}
 	
@@ -49,9 +48,7 @@ public class PlayerListener implements Listener {
 		String previousGroup = playerService.getWorldGroup(event.getFrom());
 		if(!currentGroup.equalsIgnoreCase(previousGroup)){
 			playerService.savePlayer(player, previousGroup);
-			if(!playerService.playerExist(player.getUniqueId().toString(), currentGroup)){
-				playerService.createPlayerInventory(player, currentGroup);
-			}
+
 			playerService.updatePlayer(player, currentGroup);		
 		}
 	}
@@ -127,11 +124,15 @@ public class PlayerListener implements Listener {
 		if(event.getEntity() instanceof Player){
 			Player player = (Player) event.getEntity();
 			boolean b = true;
-			if(Main.getPlugin().essSupport){
-				if(Main.getPlugin().essentials.getUser(player).isGodModeEnabled()){
+			
+			if(Main.getPlugin().getServer().getPluginManager().getPlugin("Essentials") != null){
+				Essentials essentials = (Essentials) Main.getPlugin().getServer().getPluginManager().getPlugin("Essentials");
+				
+				if(essentials.getUser(player).isGodModeEnabled()){
 					b = false;
 				}
 			}
+
 			if(b){
 				PlayerService playerService = PlayerService.instance();
 				playerService.savePlayer(player, playerService.getWorldGroup(player.getWorld()));
