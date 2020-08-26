@@ -24,7 +24,7 @@ public abstract class SQLMethods extends SQLUtils {
 		synchronized (lock) {
 			try {
 				Connection connection = getConnection();
-				PreparedStatement statement = connection.prepareStatement("CREATE TABLE IF NOT EXISTS" + group + "( id INTEGER PRIMARY KEY, Player TEXT, Inventory BLOB, Armor BLOB, Health INTEGER, Experience FLOAT, Level INTEGER, Food INTEGER, Saturation FLOAT)");
+				PreparedStatement statement = connection.prepareStatement("CREATE TABLE IF NOT EXISTS " + group + "(Player TEXT, Inventory BLOB, Armor BLOB, Health INTEGER, Experience FLOAT, Level INTEGER, Food INTEGER, Saturation FLOAT)");
 				
 				statement.executeUpdate();
 				
@@ -80,7 +80,7 @@ public abstract class SQLMethods extends SQLUtils {
 				statement.setInt(5, player.getExpToLevel());
 				statement.setInt(6, player.getFoodLevel());
 				statement.setFloat(7, player.getSaturation());
-				statement.setString(2, "`" + player.getUniqueId().toString() + "`");
+				statement.setString(8, "`" + player.getUniqueId().toString() + "`");
 				statement.executeUpdate();
 				
 				statement.close();

@@ -35,6 +35,10 @@ repositories {
     maven {
     	url 'https://mvnrepository.com/artifact/com.h2database/h2'
     }
+    maven {
+        name 'papermc'
+        url 'https://papermc.io/repo/repository/maven-public/'
+    }
 }
 
 dependencies {
@@ -43,10 +47,16 @@ dependencies {
     compileOnly 'com.github.MilkBowl:VaultAPI:1.7'
 	compileOnly 'net.ess3:EssentialsX:2.18.1'
 	compileOnly 'com.github.LogBlock:LogBlock:master'
+	compileOnly 'io.papermc:paperlib:1.0.4'
+	implementation group: 'com.h2database', name: 'h2', version: '1.4.200'
     implementation fileTree(include: ['*.jar'], dir: 'libs')
 }
 
 shadowJar {
+    dependencies {
+        include dependency("com.h2database:h2:1.4.200")
+    }
+    relocate 'org.h2', 'org.trentech.gameover.h2'
     archiveName = "gameover-${project.version}.jar"
 }
 

@@ -32,6 +32,8 @@ public class Main extends JavaPlugin {
 
 	@Override
 	public void onEnable(){
+		plugin = this;
+		
 		registerEvents(this, new EventListener(), new PlayerListener());
 
 		File configFile = new File(getDataFolder(), "config.yml");

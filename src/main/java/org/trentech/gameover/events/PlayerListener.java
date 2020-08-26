@@ -138,6 +138,5 @@ public class PlayerListener implements Listener {
 				playerService.savePlayer(player, playerService.getWorldGroup(player.getWorld()));
 			}
 		}
-	}
-	 
+	}	 
 }
