@@ -98,7 +98,7 @@ public class Main extends JavaPlugin {
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 		if (label.equalsIgnoreCase("go") || label.equalsIgnoreCase("gameover")){
 			if(args.length == 1 && args[0].equalsIgnoreCase("reload")){
-				if(sender.hasPermission("GameOver.reload")){
+				if(sender.hasPermission("gameover.reload")){
 					reloadConfig();
 	                File folder = new File(getDataFolder() + "/players/");
 	                if(folder.exists()){
